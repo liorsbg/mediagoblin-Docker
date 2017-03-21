@@ -21,21 +21,26 @@ RUN apt-get install -y sudo git-core
 RUN apt-get install -y python python-dev python-lxml python-imaging python-virtualenv
 RUN apt-get install -y npm nodejs-legacy automake
 RUN apt-get install -y nginx
+
 RUN useradd -c "GNU MediaGoblin system account" -d /var/lib/mediagoblin -m -r -g www-data mediagoblin
 RUN groupadd mediagoblin && sudo usermod --append -G mediagoblin mediagoblin
 RUN mkdir -p /var/log/mediagoblin && chown -hR mediagoblin:mediagoblin /var/log/mediagoblin
 RUN mkdir -p /srv/mediagoblin.example.org && chown -hR mediagoblin:www-data /srv/mediagoblin.example.org
-RUN cd /srv/mediagoblin.example.org && sudo -u mediagoblin git clone http://git.savannah.gnu.org/r/mediagoblin.git
-RUN cd /srv/mediagoblin.example.org/mediagoblin && sudo -u mediagoblin git checkout stable
-RUN cd /srv/mediagoblin.example.org/mediagoblin && sudo -u mediagoblin git submodule sync
-RUN cd /srv/mediagoblin.example.org/mediagoblin && sudo -u mediagoblin git submodule update --force --init --recursive
-RUN cd /srv/mediagoblin.example.org/mediagoblin && sudo -u mediagoblin ./bootstrap.sh
-RUN cd /srv/mediagoblin.example.org/mediagoblin && sudo -u mediagoblin ./configure
-RUN cd /srv/mediagoblin.example.org/mediagoblin && sudo -u mediagoblin make
-RUN cd /srv/mediagoblin.example.org/mediagoblin && sudo -u mediagoblin bin/easy_install flup==1.0.3.dev-20110405
-RUN cd /srv/mediagoblin.example.org/mediagoblin && sudo -u mediagoblin ln -s /var/lib/mediagoblin user_dev
-RUN cd /srv/mediagoblin.example.org/mediagoblin && sudo -u mediagoblin bash -c 'cp -av mediagoblin.ini mediagoblin_local.ini && cp -av paste.ini paste_local.ini'
-RUN cd /srv/mediagoblin.example.org/mediagoblin && sudo -u mediagoblin perl -pi -e 's|.*sql_engine = .*|sql_engine = sqlite:////var/lib/mediagoblin/mediagoblin.db|' mediagoblin_local.ini
+
+WORKDIR /srv/mediagoblin.example.org
+RUN sudo -u mediagoblin git clone http://git.savannah.gnu.org/r/mediagoblin.git
+
+WORKDIR /srv/mediagoblin.example.org/mediagoblin
+RUN sudo -u mediagoblin git checkout stable
+RUN sudo -u mediagoblin git submodule sync
+RUN sudo -u mediagoblin git submodule update --force --init --recursive
+RUN sudo -u mediagoblin ./bootstrap.sh
+RUN sudo -u mediagoblin ./configure
+RUN sudo -u mediagoblin make
+RUN sudo -u mediagoblin bin/easy_install flup==1.0.3.dev-20110405
+RUN sudo -u mediagoblin ln -s /var/lib/mediagoblin user_dev
+RUN sudo -u mediagoblin bash -c 'cp -av mediagoblin.ini mediagoblin_local.ini && cp -av paste.ini paste_local.ini'
+RUN sudo -u mediagoblin perl -pi -e 's|.*sql_engine = .*|sql_engine = sqlite:////var/lib/mediagoblin/mediagoblin.db|' mediagoblin_local.ini
 #
 # Video plugin
 #
@@ -48,18 +53,18 @@ RUN apt-get install -y python-gi python3-gi \
     gstreamer1.0-plugins-bad \
     gstreamer1.0-libav \
     python-gst-1.0
-RUN cd /srv/mediagoblin.example.org/mediagoblin && echo '[[mediagoblin.media_types.video]]' | sudo -u mediagoblin tee -a mediagoblin_local.ini
+RUN echo '[[mediagoblin.media_types.video]]' | sudo -u mediagoblin tee -a mediagoblin_local.ini
 #
 # Audio plugin
 #
 RUN apt-get install -y python-gst-1.0 gstreamer1.0-plugins-base gstreamer1.0-plugins-bad gstreamer1.0-plugins-good gstreamer1.0-plugins-ugly gstreamer1.0-libav libsndfile1-dev libasound2-dev libgstreamer-plugins-base1.0-dev python-numpy python-scipy
-RUN cd /srv/mediagoblin.example.org/mediagoblin && echo '[[mediagoblin.media_types.audio]]' | sudo -u mediagoblin tee -a mediagoblin_local.ini
-RUN cd /srv/mediagoblin.example.org/mediagoblin && sudo -u mediagoblin bin/pip install scikits.audiolab
+RUN echo '[[mediagoblin.media_types.audio]]' | sudo -u mediagoblin tee -a mediagoblin_local.ini
+RUN sudo -u mediagoblin bin/pip install scikits.audiolab
 #
 # PDF plugin
 #
 RUN apt-get install -y poppler-utils
-RUN cd /srv/mediagoblin.example.org/mediagoblin && echo '[[mediagoblin.media_types.pdf]]' | sudo -u mediagoblin tee -a mediagoblin_local.ini
+RUN echo '[[mediagoblin.media_types.pdf]]' | sudo -u mediagoblin tee -a mediagoblin_local.ini
 #
 #
 #
@@ -68,4 +73,5 @@ RUN rm /etc/nginx/sites-enabled/default
 RUN echo 'ALL ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 EXPOSE 80
 ADD docker-entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
