@@ -76,7 +76,9 @@ RUN rm /etc/nginx/sites-enabled/default
 RUN echo 'ALL ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 EXPOSE 80
 
-USER mediagoblin
 ADD docker-entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+RUN chown mediagoblin:www-data /entrypoint.sh
+RUN chmod 770 /entrypoint.sh
+
+USER mediagoblin
 ENTRYPOINT ["/entrypoint.sh"]
